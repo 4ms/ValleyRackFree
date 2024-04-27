@@ -6,7 +6,7 @@
 #include "../dsp/delays/AllpassFilter.hpp"
 #include "../dsp/filters/OnePoleFilters.hpp"
 #include "../dsp/modulation/LFO.hpp"
-#include <iostream>
+// #include <iostream>
 #include <array>
 
 class Dattorro1997Tank {

@@ -3,8 +3,8 @@
 #define DR_WAV_IMPLEMENTATION
 using namespace rack;
 
-#include <iomanip> // setprecision
-#include <sstream> // stringstream
+// #include <iomanip> // setprecision
+// #include <sstream> // stringstream
 #define VALLEY_NAME "Valley"
 
 #define TFORM_MAX_BANKS 64
