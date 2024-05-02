@@ -830,13 +830,14 @@ void UGraphWidget::step() {
 
     // Panel text
     auto floatToTempoText = [](float a){
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(1) << a;
-        if (a >= 40.0) {
-            return stream.str();
-        }
-        std::string out = "Ext.";
-        return out;
+        // std::stringstream stream;
+        // stream << std::fixed << std::setprecision(1) << a;
+        // if (a >= 40.0) {
+        //     return stream.str();
+        // }
+        // std::string out = "Ext.";
+        // return out;
+		return "";
     };
 
     auto floatToEuclideanText = [](float a) -> std::string {
