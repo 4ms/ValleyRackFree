@@ -472,20 +472,20 @@ void Dexter::step() {
     outputs[OP_4_OUTPUT].setVoltage(0);
 
     for (auto i = 0; i < 4; ++i) {
-        outputs[A_LEFT_OUTPUT].value += pLeftOut[i];
-        outputs[A_RIGHT_OUTPUT].value += pRightOut[i];
-        outputs[OP_1_OUTPUT].value += pOP1[i];
-        outputs[OP_2_OUTPUT].value += pOP2[i];
-        outputs[OP_3_OUTPUT].value += pOP3[i];
-        outputs[OP_4_OUTPUT].value += pOP4[i];
+        outputs[A_LEFT_OUTPUT].setVoltage(outputs[A_LEFT_OUTPUT].getVoltage() + pLeftOut[i]);
+        outputs[A_RIGHT_OUTPUT].setVoltage(outputs[A_RIGHT_OUTPUT].getVoltage() + pRightOut[i]);
+        outputs[OP_1_OUTPUT].setVoltage(outputs[OP_1_OUTPUT].getVoltage() + pOP1[i]);
+        outputs[OP_2_OUTPUT].setVoltage(outputs[OP_2_OUTPUT].getVoltage() + pOP2[i]);
+        outputs[OP_3_OUTPUT].setVoltage(outputs[OP_3_OUTPUT].getVoltage() + pOP3[i]);
+        outputs[OP_4_OUTPUT].setVoltage(outputs[OP_4_OUTPUT].getVoltage() + pOP4[i]);
     }
 
-    outputs[A_LEFT_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
-    outputs[A_RIGHT_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
-    outputs[OP_1_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
-    outputs[OP_2_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
-    outputs[OP_3_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
-    outputs[OP_4_OUTPUT].value *= _outputLevels[chordNotes.size() - 1];
+    outputs[A_LEFT_OUTPUT].setVoltage(outputs[A_LEFT_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
+    outputs[A_RIGHT_OUTPUT].setVoltage(outputs[A_RIGHT_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
+    outputs[OP_1_OUTPUT].setVoltage(outputs[OP_1_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
+    outputs[OP_2_OUTPUT].setVoltage(outputs[OP_2_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
+    outputs[OP_3_OUTPUT].setVoltage(outputs[OP_3_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
+    outputs[OP_4_OUTPUT].setVoltage(outputs[OP_4_OUTPUT].getVoltage() * _outputLevels[chordNotes.size() - 1]);
 }
 
 void Dexter::getParameters() {
