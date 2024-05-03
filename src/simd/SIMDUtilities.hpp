@@ -47,6 +47,14 @@
     inline void aligned_free_16(void* ptr) {
         free(ptr);
     }
+#elif __ARM_ARCH_7A__
+    inline void* aligned_alloc_16(size_t __size) {
+        return aligned_alloc(16, __size);
+    }
+
+    inline void aligned_free_16(void* ptr) {
+        free(ptr);
+    }
 #endif
 
 inline __m128 _mm_high_ps() {
