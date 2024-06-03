@@ -3,7 +3,9 @@
 #include "../../Valley.hpp"
 #include "../../utilities/Utilities.hpp"
 #include "../../simd/SIMDUtilities.hpp"
+#ifndef DSJ_VEC_DIODE_TABLE_N
 #define DSJ_VEC_DIODE_TABLE_N 512
+#endif
 using namespace std;
 
 class VecDiode {
@@ -21,7 +23,7 @@ private:
     float _vBF, _vLF;
     int _vBI_1, _vLI_1, _vBI_2, _vLI_2;
     float _lutA, _lutB, _lutC, _lutD;
-    float _makeupGain[512][512];
+    float _makeupGain[DSJ_VEC_DIODE_TABLE_N][DSJ_VEC_DIODE_TABLE_N];
     float calcNLP(float x, float vB, float vL);
     float calcLin(float x, float vB, float vL);
     __m128 vecCalcNLP(__m128 x, float vB, float vL);
