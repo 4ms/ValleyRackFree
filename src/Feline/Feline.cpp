@@ -30,7 +30,7 @@ Feline::Feline() {
     configOutput(Feline::SUM_OUTPUT, "Left + Right Mix");
 
     panelStyle = 0;
-    calcGTable(APP->engine->getSampleRate());
+    // calcGTable(APP->engine->getSampleRate());
     filter.setSampleRate(APP->engine->getSampleRate());
     filter.setCutoff(_mm_set1_ps(10.f));
     filter.setQ(_mm_set1_ps(0.f));
@@ -94,7 +94,7 @@ void Feline::step() {
 }
 
 void Feline::onSampleRateChange() {
-    calcGTable(APP->engine->getSampleRate());
+    // calcGTable(APP->engine->getSampleRate());
     filter.setSampleRate(APP->engine->getSampleRate());
 }
 

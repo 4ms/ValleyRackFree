@@ -83,7 +83,7 @@ Interzone::Interzone() {
     configOutput(ENV_NEGATIVE_OUTPUT, "Envelope negative");
 
     float initSampleRate = APP->engine->getSampleRate();
-    calcGTable(initSampleRate);
+    // calcGTable(initSampleRate);
     lfo.setSampleRate(initSampleRate);
     lfoSlew.setSampleRate(initSampleRate);
     lfoSlew.setCutoffFreq(14000.f);
@@ -313,7 +313,7 @@ void Interzone::tickSynth() {
 
 void Interzone::onSampleRateChange() {
     float newSampleRate = APP->engine->getSampleRate();
-    calcGTable(newSampleRate);
+    // calcGTable(newSampleRate);
     lfo.setSampleRate(newSampleRate);
     lfoSlew.setSampleRate(newSampleRate);
     pink.setSampleRate(newSampleRate);

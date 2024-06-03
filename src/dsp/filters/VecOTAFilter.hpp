@@ -14,7 +14,7 @@
 #include "../../simd/SIMDUtilities.hpp"
 #include "../../utilities/Utilities.hpp"
 #include "../shaping/VecNonLinear.hpp"
-#include "../filters/OTAFilter.hpp"
+#include "../shaping/NonLinear.hpp"
 #include <iostream>
 
 class VecTPTOnePoleStage {
