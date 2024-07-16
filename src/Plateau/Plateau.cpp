@@ -1,4 +1,5 @@
 #include "Plateau.hpp"
+#include "../../../../src/medium/debug_raw.h"
 
     Plateau::Plateau() : reverb(192000, 16, sizeMax) {
 	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -89,16 +90,23 @@
 }
 
 void Plateau::process(const ProcessArgs &args) {
+	DebugPin0High();
     getParameters();
+	DebugPin0Low();
     setLights();
+	DebugPin0High();
 
     leftInput = clamp(leftInput, -10.f, 10.f);
     rightInput = clamp(rightInput, -10.f, 10.f);
 
     reverb.setTimeScale(size);
+	DebugPin0Low();
     reverb.setPreDelay(clamp(preDelay, 0.f, 1.f));
+	DebugPin0High();
     reverb.setInputFilterLowCutoffPitch(inputDampLow);
+	DebugPin0Low();
     reverb.setInputFilterHighCutoffPitch(inputDampHigh);
+	DebugPin0High();
     reverb.enableInputDiffusion(diffuseInput > 0.5f);
     reverb.setDecay(decay);
     reverb.setTankDiffusion(diffusion);
@@ -108,8 +116,10 @@ void Plateau::process(const ProcessArgs &args) {
     reverb.setTankModDepth(modDepth);
     reverb.setTankModShape(modShape);
 
+	DebugPin1High();
     reverb.process(leftInput * minus20dBGain * inputSensitivity * envelope._value,
                    rightInput * minus20dBGain * inputSensitivity * envelope._value);
+	DebugPin1Low();
 
     leftOutput = leftInput * dry + reverb.getLeftOutput() * wet *
                  envelope._value;
@@ -128,6 +138,7 @@ void Plateau::process(const ProcessArgs &args) {
         outputs[LEFT_OUTPUT].setVoltage(clamp(leftOutput, -10.f, 10.f));
         outputs[RIGHT_OUTPUT].setVoltage(clamp(rightOutput, -10.f, 10.f));
     }
+	DebugPin0Low();
 }
 
 void Plateau::getParameters() {

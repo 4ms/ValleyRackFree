@@ -1,6 +1,7 @@
 #include "Dattorro.hpp"
 #include <cassert>
 #include <algorithm>
+#include "../../../../src/medium/debug_raw.h"
 
 Dattorro1997Tank::Dattorro1997Tank(const double initSampleRate,
                                    const double initMaxLfoDepth,
@@ -30,13 +31,16 @@ Dattorro1997Tank::Dattorro1997Tank(const double initSampleRate,
 
 void Dattorro1997Tank::process(const double leftIn, const double rightIn,
                                double* leftOut, double* rightOut) {
+	DebugPin3High();
     tickApfModulation();
+	DebugPin3Low();
 
     decay = frozen ? 1.0 : decayParam;
 
     leftSum += leftIn;
     rightSum += rightIn;
 
+	DebugPin3High();
     leftApf1.input = leftSum;
     leftDelay1.input = leftApf1.process();
     leftDelay1.process();
@@ -45,6 +49,7 @@ void Dattorro1997Tank::process(const double leftIn, const double rightIn,
     leftApf2.input = (leftDelay1.output * (1.0 - fade) + leftLowCutFilter.process() * fade) * decay;
     leftDelay2.input = leftApf2.process();
     leftDelay2.process();
+	DebugPin3Low();
 
     rightApf1.input = rightSum;
     rightDelay1.input = rightApf1.process();
@@ -58,6 +63,7 @@ void Dattorro1997Tank::process(const double leftIn, const double rightIn,
     rightSum = leftDelay2.output * decay;
     leftSum = rightDelay2.output * decay;
 
+	DebugPin3High();
     leftOutDCBlock.input = leftApf1.output;
     leftOutDCBlock.input += leftDelay1.tap(scaledOutputTaps[L_DELAY_1_L_TAP_1]);
     leftOutDCBlock.input += leftDelay1.tap(scaledOutputTaps[L_DELAY_1_L_TAP_2]);
@@ -67,6 +73,7 @@ void Dattorro1997Tank::process(const double leftIn, const double rightIn,
     leftOutDCBlock.input -= rightApf2.delay.tap(scaledOutputTaps[R_APF_2_L_TAP]);
     leftOutDCBlock.input -= rightDelay2.tap(scaledOutputTaps[R_DELAY_2_L_TAP]);
 
+	DebugPin3Low();
     rightOutDCBlock.input = rightApf1.output;
     rightOutDCBlock.input += rightDelay1.tap(scaledOutputTaps[R_DELAY_1_R_TAP_1]);
     rightOutDCBlock.input += rightDelay1.tap(scaledOutputTaps[R_DELAY_1_R_TAP_2]);
@@ -76,6 +83,7 @@ void Dattorro1997Tank::process(const double leftIn, const double rightIn,
     rightOutDCBlock.input -= leftApf2.delay.tap(scaledOutputTaps[L_APF_2_R_TAP]);
     rightOutDCBlock.input -= leftDelay2.tap(scaledOutputTaps[L_DELAY_2_R_TAP]);
 
+	DebugPin3High();
     *leftOut = leftOutDCBlock.process() * 0.5;
     *rightOut = rightOutDCBlock.process() * 0.5;
 
@@ -84,6 +92,7 @@ void Dattorro1997Tank::process(const double leftIn, const double rightIn,
 
     assert(fade >= 0.0);
     assert(fade <= 1.0);
+	DebugPin3Low();
 }
 
 void Dattorro1997Tank::freeze(bool freezeFlag) {
@@ -287,7 +296,9 @@ void Dattorro::process(double leftInput, double rightInput) {
     inApf4.input = inApf3.process();
     tankFeed = preDelay.output * (1.0 - diffuseInput) + inApf4.process() * diffuseInput;
 
+	DebugPin2High();
     tank.process(tankFeed, tankFeed, &leftOut, &rightOut);
+	DebugPin2Low();
 }
 
 void Dattorro::clear() {
