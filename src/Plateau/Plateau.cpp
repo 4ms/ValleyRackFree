@@ -91,7 +91,7 @@
 
 void Plateau::process(const ProcessArgs &args) {
 	DebugPin0High();
-    getParameters();
+    getParameters(); //0.6
 	DebugPin0Low();
     setLights();
 	DebugPin0High();
@@ -99,7 +99,7 @@ void Plateau::process(const ProcessArgs &args) {
     leftInput = clamp(leftInput, -10.f, 10.f);
     rightInput = clamp(rightInput, -10.f, 10.f);
 
-    reverb.setTimeScale(size);
+    reverb.setTimeScale(size); //0.7
 	DebugPin0Low();
     reverb.setPreDelay(clamp(preDelay, 0.f, 1.f));
 	DebugPin0High();
