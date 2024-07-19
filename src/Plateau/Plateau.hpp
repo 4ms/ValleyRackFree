@@ -190,7 +190,7 @@ struct Plateau : Module {
     float leftOutput = 0.f;
     float rightOutput = 0.f;
 
-    Dattorro reverb;
+    Dattorro<float> reverb;
     LinearEnvelope envelope;
 
     int panelStyle = 0;

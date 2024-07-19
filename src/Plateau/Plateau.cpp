@@ -1,5 +1,4 @@
 #include "Plateau.hpp"
-#include "../../../../src/medium/debug_raw.h"
 
     Plateau::Plateau() : reverb(192000, 16, sizeMax) {
 	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -103,9 +102,9 @@ void Plateau::process(const ProcessArgs &args) {
 	DebugPin0Low();
     reverb.setPreDelay(clamp(preDelay, 0.f, 1.f));
 	DebugPin0High();
-    reverb.setInputFilterLowCutoffPitch(inputDampLow);
+    reverb.setInputFilterLowCutoffPitch(inputDampLow); //0.6
 	DebugPin0Low();
-    reverb.setInputFilterHighCutoffPitch(inputDampHigh);
+    reverb.setInputFilterHighCutoffPitch(inputDampHigh); //
 	DebugPin0High();
     reverb.enableInputDiffusion(diffuseInput > 0.5f);
     reverb.setDecay(decay);
