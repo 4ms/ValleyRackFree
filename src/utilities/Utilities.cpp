@@ -21,6 +21,8 @@ std::string extractDirectoryFromFilePath(const std::string& filepath) {
         lastSlashIdx = filepath.rfind('/');
     #elif __linux__
         lastSlashIdx = filepath.rfind('/');
+	#else
+		lastSlashIdx = filepath.rfind('/');
     #endif
 
     if (std::string::npos != lastSlashIdx) {
