@@ -6,5 +6,5 @@ struct Pow2TableRange {
 	static constexpr float max = 5.1f;
 };
 
-Mapping::LookupTable_t<64, double> Pow2 =
-	Mapping::LookupTable_t<64, double>::generate<Pow2TableRange>([](auto x) { return std::pow(2.f, x); });
+Mapping::LookupTable_t<64, float> Pow2 =
+	Mapping::LookupTable_t<64, float>::generate<Pow2TableRange>([](auto x) { return std::pow(2.f, x); });
