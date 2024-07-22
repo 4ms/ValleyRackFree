@@ -9,15 +9,16 @@
 #include <cstdint>
 // #include <iostream>
 #include <cassert>
+#include <algorithm>
 #include "../../utilities/Utilities.hpp"
 
-template<typename T = float>
+template<typename T = float, typename IntT = int32_t>
 class InterpDelay {
 public:
     T input = T(0);
     T output = T(0);
 
-    InterpDelay(uint64_t maxLength = 512, uint64_t initDelayTime = 0) {
+    InterpDelay(uint32_t maxLength = 512, IntT initDelayTime = 0) {
         assert(maxLength != 0);
         l = maxLength;
         buffer = std::vector<T>(l, T(0));
@@ -28,7 +29,7 @@ public:
         assert(w >= 0);
         assert(w < l);
         buffer[w] = input;
-        int64_t r = w - t;
+        IntT r = w - t;
         
         if (r < 0) {
             r += l;
@@ -39,7 +40,7 @@ public:
             w = 0;
         }
 
-        int64_t upperR = r - 1;
+        IntT upperR = r - 1;
         if (upperR < 0) {
             upperR += l;
         }
@@ -51,12 +52,12 @@ public:
         output = linterp(buffer[r], buffer[upperR], f);
     }
 
-    T tap(int64_t i) const {
+    T tap(IntT i) const {
 
         assert(i < l);
         assert(i >= 0);
 
-        int64_t j = w - i;
+        IntT j = w - i;
         if (j < 0) {
             j += buffer.size();
         }
@@ -64,13 +65,7 @@ public:
     }
 
     void setDelayTime(T newDelayTime) {
-        if (newDelayTime >= l) {
-            newDelayTime = l - 1;
-        }
-        if (newDelayTime < 0) {
-            newDelayTime = 0;
-        }
-        t = static_cast<int64_t>(newDelayTime);
+		t = std::clamp<IntT>(newDelayTime, 0, l-1);
         f = newDelayTime - static_cast<T>(t);
     }
 
@@ -82,9 +77,9 @@ public:
 
 private:
     std::vector<T> buffer;
-    int64_t w = 0;
-    int64_t t = 0;
+    IntT w = 0;
+    IntT t = 0;
     T f = T(0);
-    int64_t l = 512;
+    IntT l = 512;
 };
 
