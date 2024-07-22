@@ -1,4 +1,5 @@
 #include "Dattorro.hpp"
+#include "utilities/math_lut.hh"
 #include <cassert>
 #include <algorithm>
 
@@ -341,11 +342,11 @@ void Dattorro::freeze(bool freezeFlag) {
 }
 
 void Dattorro::setInputFilterLowCutoffPitch(FLOAT pitch) {
-    inputLowCut = 440.0 * std::pow(2.0, pitch - 5.0);
+    inputLowCut = 440.0 * Pow2(pitch - 5.0);
 }
 
 void Dattorro::setInputFilterHighCutoffPitch(FLOAT pitch) {
-    inputHighCut = 440.0 * std::pow(2.0, pitch - 5.0);
+    inputHighCut = 440.0 * Pow2(pitch - 5.0);
 }
 
 void Dattorro::enableInputDiffusion(bool enable) {
@@ -363,12 +364,12 @@ void Dattorro::setTankDiffusion(const FLOAT diffusion) {
 }
 
 void Dattorro::setTankFilterHighCutFrequency(const FLOAT pitch) {
-    auto frequency = 440.0 * std::pow(2.0, pitch - 5.0);
+    auto frequency = 440.0 * Pow2(pitch - 5.0);
     tank.setHighCutFrequency(frequency);
 }
 
 void Dattorro::setTankFilterLowCutFrequency(const FLOAT pitch) {
-    auto frequency = 440.0 * std::pow(2.0, pitch - 5.0);
+    auto frequency = 440.0 * Pow2(pitch - 5.0);
     tank.setLowCutFrequency(frequency);
 }
 
