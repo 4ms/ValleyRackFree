@@ -1,4 +1,5 @@
 #include "Plateau.hpp"
+#include "utilities/math_lut.hh"
 
     Plateau::Plateau() : reverb(192000, 16, sizeMax) {
 	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -195,7 +196,7 @@ void Plateau::getParameters() {
         case 1: preDelayCVSens = preDelayLowSens;
     }
     preDelay = params[PRE_DELAY_PARAM].getValue();
-    preDelay += 0.5f * (powf(2.f,inputs[PRE_DELAY_CV_INPUT].getVoltage() *
+    preDelay += 0.5f * (Pow2(inputs[PRE_DELAY_CV_INPUT].getVoltage() *
                              preDelayCVSens) - 1.f);
 
     size = inputs[SIZE_CV_INPUT].getVoltage() *
@@ -203,7 +204,7 @@ void Plateau::getParameters() {
     size += params[SIZE_PARAM].getValue();
 
     if(tuned) {
-        size = sizeMin * powf(2.f, size * 5.f);
+        size = sizeMin * Pow2(size * 5.f);
         size = clamp(size, sizeMin, 2.5f);
     }
     else {
