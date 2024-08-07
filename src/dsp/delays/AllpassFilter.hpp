@@ -97,7 +97,7 @@ public:
     }
 
     T input;
-    T gain1, gain2;;
+    T gain1, gain2;
     T output;
     T decay1, decay2;
     InterpDelay<T> delay1, delay2;

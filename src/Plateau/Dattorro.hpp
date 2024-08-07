@@ -149,7 +149,7 @@ private:
 
     AllpassFilter<FLOAT> rightApf1;
     InterpDelay<FLOAT> rightDelay1;
-    OnePoleLPFilter rightHighCutFilter;;
+    OnePoleLPFilter rightHighCutFilter;
     OnePoleHPFilter rightLowCutFilter;
     AllpassFilter<FLOAT> rightApf2;
     InterpDelay<FLOAT> rightDelay2;
@@ -205,20 +205,14 @@ private:
     static constexpr FLOAT dattorroSampleRate = 29761.0;
     FLOAT sampleRate = 44100.0;
     FLOAT dattorroScaleFactor = sampleRate / dattorroSampleRate;
-    FLOAT leftSum = 0.0;
-    FLOAT rightSum = 0.0;
 
     FLOAT rightOut = 0.0;
     FLOAT leftOut = 0.0;
     FLOAT inputLowCut = 0.0;
     FLOAT inputHighCut = 10000.0;
-    FLOAT reverbHighCut = 10000.0;
-    FLOAT reverbLowCut = 0.0;
-    FLOAT modDepth = 1.0;
     FLOAT inputDiffusion1 = 0.75;
     FLOAT inputDiffusion2 = 0.625;
     FLOAT decay = 0.9999;
-    FLOAT modSpeed = 1.0;
     FLOAT diffuseInput = 0.0;
 
     OnePoleHPFilter leftInputDCBlock;
