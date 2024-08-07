@@ -4,22 +4,23 @@
 #include <cmath>
 #include <cstdint>
 
+template<typename F = float>
 class LFO {
 public:
-    double output = 0.0;
-    double phase = 0.0;
+    F output = 0.0;
+    F phase = 0.0;
 
     LFO() {
         _frequency = 1.0;
         _sampleRate = 44100.0;
-        _stepSize = _frequency * (double)kTableLength / _sampleRate;
+        _stepSize = _frequency * (F)kTableLength / _sampleRate;
         for(auto i = 0; i < kTableLength; ++i) {
-            _sine.push_back(sin(2.0 * M_PI * (double)i / (double)kTableLength));
+            _sine.push_back(sin(2.0 * M_PI * (F)i / (F)kTableLength));
         }
         _phasor = 0.0;
     }
 
-    double process() {
+    F process() {
         _plusPhase = _phasor + phase * kTableLength;
         if(_plusPhase < 0.0) {
             _plusPhase += kTableLength;
@@ -41,33 +42,34 @@ public:
         return output;
     }
 
-    void setFrequency(double frequency) {
+    void setFrequency(F frequency) {
         _frequency = frequency;
         calcStepSize();
     }
-    void setSamplerate(double sampleRate) {
+    void setSamplerate(F sampleRate) {
         _sampleRate = sampleRate;
         calcStepSize();
     }
 private:
-    double _frequency;
-    double _sampleRate;
-    double _stepSize;
-    double _phasor;
-    double _plusPhase;
+    F _frequency;
+    F _sampleRate;
+    F _stepSize;
+    F _phasor;
+    F _plusPhase;
     long _a, _b;
-    double _frac;
+    F _frac;
     const long kTableLength = 4096;
-    std::vector<double> _sine;
+    std::vector<F> _sine;
 
     void calcStepSize() {
-        _stepSize = _frequency * (double)kTableLength / _sampleRate;
+        _stepSize = _frequency * (F)kTableLength / _sampleRate;
     }
 };
 
+template<typename F = float>
 class TriSawLFO {
 public:
-    TriSawLFO(double sampleRate = 44100.0, double frequency = 1.0) {
+    TriSawLFO(F sampleRate = 44100.0, F frequency = 1.0) {
         phase = 0.0;
         _output = 0.0;
         _sampleRate = sampleRate;
@@ -77,7 +79,7 @@ public:
         setRevPoint(0.5);
     }
 
-    double process() {
+    F process() {
         if(_step > 1.0) {
             _step -= 1.0;
             _rising = true;
@@ -100,7 +102,7 @@ public:
         return _output;
     }
 
-    void setFrequency(double frequency) {
+    void setFrequency(F frequency) {
         if (frequency == _frequency) {
             return;
         }
@@ -108,7 +110,7 @@ public:
         calcStepSize();
     }
 
-    void setRevPoint(double revPoint) {
+    void setRevPoint(F revPoint) {
         _revPoint = revPoint;
         if(_revPoint < 0.0001) {
             _revPoint = 0.0001;
@@ -121,26 +123,26 @@ public:
         _fallRate = -1.0 / (1.0 - _revPoint);
     }
 
-    void setSamplerate(double sampleRate) {
+    void setSamplerate(F sampleRate) {
         _sampleRate = sampleRate;
         calcStepSize();
     }
 
-    double getOutput() const {
+    F getOutput() const {
         return _output;
     }
 
-    double phase;
+    F phase;
 
 private:
-    double _output;
-    double _sampleRate;
-    double _frequency = 0.0;
-    double _revPoint;
-    double _riseRate;
-    double _fallRate;
-    double _step;
-    double _stepSize;
+    F _output;
+    F _sampleRate;
+    F _frequency = 0.0;
+    F _revPoint;
+    F _riseRate;
+    F _fallRate;
+    F _step;
+    F _stepSize;
     bool _rising;
 
     void calcStepSize() {

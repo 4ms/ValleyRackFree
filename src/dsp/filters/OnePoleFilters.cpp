@@ -1,12 +1,12 @@
 #include "OnePoleFilters.hpp"
 #include <cassert>
 
-OnePoleLPFilter::OnePoleLPFilter(double cutoffFreq, double initSampleRate) {
+OnePoleLPFilter::OnePoleLPFilter(FLOAT cutoffFreq, FLOAT initSampleRate) {
     setSampleRate(initSampleRate);
     setCutoffFreq(cutoffFreq);
 }
 
-double OnePoleLPFilter::process() {
+FLOAT OnePoleLPFilter::process() {
     _z =  _a * input + _z * _b;
     output = _z;
     return output;
@@ -18,7 +18,7 @@ void OnePoleLPFilter::clear() {
     output = 0.0;
 }
 
-void OnePoleLPFilter::setSampleRate(double sampleRate) {
+void OnePoleLPFilter::setSampleRate(FLOAT sampleRate) {
     assert(sampleRate > 0.0);
 
     _sampleRate = sampleRate;
@@ -27,7 +27,7 @@ void OnePoleLPFilter::setSampleRate(double sampleRate) {
     setCutoffFreq(_cutoffFreq);
 }
 
-void OnePoleLPFilter::setCutoffFreq(double cutoffFreq) {
+void OnePoleLPFilter::setCutoffFreq(FLOAT cutoffFreq) {
     if (cutoffFreq == _cutoffFreq) {
         return;
     }
@@ -40,19 +40,19 @@ void OnePoleLPFilter::setCutoffFreq(double cutoffFreq) {
     _a = 1.0 - _b;
 }
 
-double OnePoleLPFilter::getMaxCutoffFreq() const {
+FLOAT OnePoleLPFilter::getMaxCutoffFreq() const {
     return _maxCutoffFreq;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-OnePoleHPFilter::OnePoleHPFilter(double initCutoffFreq, double initSampleRate) {
+OnePoleHPFilter::OnePoleHPFilter(FLOAT initCutoffFreq, FLOAT initSampleRate) {
     setSampleRate(initSampleRate);
     setCutoffFreq(initCutoffFreq);
     clear();
 }
 
-double OnePoleHPFilter::process() {
+FLOAT OnePoleHPFilter::process() {
     _x0 = input;
     _y0 = _a0 * _x0 + _a1 * _x1 + _b1 * _y1;
     _y1 = _y0;
@@ -70,7 +70,7 @@ void OnePoleHPFilter::clear() {
     _y1 = 0.0;
 }
 
-void OnePoleHPFilter::setCutoffFreq(double cutoffFreq) {
+void OnePoleHPFilter::setCutoffFreq(FLOAT cutoffFreq) {
     if (cutoffFreq == _cutoffFreq) {
         return;
     }
@@ -84,7 +84,7 @@ void OnePoleHPFilter::setCutoffFreq(double cutoffFreq) {
     _a1 = -_a0;
 }
 
-void OnePoleHPFilter::setSampleRate(double sampleRate) {
+void OnePoleHPFilter::setSampleRate(FLOAT sampleRate) {
     _sampleRate = sampleRate;
     _1_sampleRate = 1.0 / _sampleRate;
     _maxCutoffFreq = sampleRate / 2.0 - 1.0;
@@ -98,13 +98,13 @@ DCBlocker::DCBlocker() {
     clear();
 }
 
-DCBlocker::DCBlocker(double cutoffFreq) {
+DCBlocker::DCBlocker(FLOAT cutoffFreq) {
     setSampleRate(44100.0);
     setCutoffFreq(cutoffFreq);
     clear();
 }
 
-double DCBlocker::process(double input) {
+FLOAT DCBlocker::process(FLOAT input) {
     output = input - _z + _b * output;
     _z = input;
     return output;
@@ -115,17 +115,17 @@ void DCBlocker::clear() {
     output = 0.0;
 }
 
-void DCBlocker::setSampleRate(double sampleRate) {
+void DCBlocker::setSampleRate(FLOAT sampleRate) {
     _sampleRate = sampleRate;
     _maxCutoffFreq = sampleRate / 2.0;
     setCutoffFreq(_cutoffFreq);
 }
 
-void DCBlocker::setCutoffFreq(double cutoffFreq) {
+void DCBlocker::setCutoffFreq(FLOAT cutoffFreq) {
     _cutoffFreq = cutoffFreq;
     _b = 0.999;
 }
 
-double DCBlocker::getMaxCutoffFreq() const {
+FLOAT DCBlocker::getMaxCutoffFreq() const {
     return _maxCutoffFreq;
 }
