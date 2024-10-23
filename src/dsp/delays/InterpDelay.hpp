@@ -65,8 +65,9 @@ public:
     }
 
     void setDelayTime(T newDelayTime) {
-		t = std::clamp<IntT>(newDelayTime, 0, l-1);
-        f = newDelayTime - static_cast<T>(t);
+        newDelayTime = std::clamp<T>(newDelayTime, 0, l - 1);
+        t = static_cast<IntT>(newDelayTime);
+        f = newDelayTime - t;
     }
 
     void clear() {
