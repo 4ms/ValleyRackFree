@@ -117,10 +117,12 @@ void Dattorro1997Tank::setSampleRate(const FLOAT newSampleRate) {
 }
 
 void Dattorro1997Tank::setTimeScale(const FLOAT newTimeScale) {
-    timeScale = newTimeScale;
-    timeScale = timeScale < minTimeScale ? minTimeScale : timeScale;
+    if (timeScale != newTimeScale) {
+        timeScale = newTimeScale;
+        timeScale = timeScale < minTimeScale ? minTimeScale : timeScale;
 
-    rescaleApfAndDelayTimes();
+        rescaleApfAndDelayTimes();
+    }
 }
 
 void Dattorro1997Tank::setDecay(const FLOAT newDecay) {
@@ -219,10 +221,16 @@ void Dattorro1997Tank::initialiseDelaysAndApfs() {
 }
 
 void Dattorro1997Tank::tickApfModulation() {
-    leftApf1.delay.setDelayTime(lfo1.process() * lfoExcursion + scaledLeftApf1Time);
-    leftApf2.delay.setDelayTime(lfo2.process() * lfoExcursion + scaledLeftApf2Time);
-    rightApf1.delay.setDelayTime(lfo3.process() * lfoExcursion + scaledRightApf1Time);
-    rightApf2.delay.setDelayTime(lfo4.process() * lfoExcursion + scaledRightApf2Time);
+    auto l1 = lfo1.process();
+    auto l2 = lfo2.process();
+    auto l3 = lfo3.process();
+    auto l4 = lfo4.process();
+    if (lfoExcursion > 0.f) {
+        leftApf1.delay.setDelayTime(l1 * lfoExcursion + scaledLeftApf1Time);
+        leftApf2.delay.setDelayTime(l2 * lfoExcursion + scaledLeftApf2Time);
+        rightApf1.delay.setDelayTime(l3 * lfoExcursion + scaledRightApf1Time);
+        rightApf2.delay.setDelayTime(l4 * lfoExcursion + scaledRightApf2Time);
+    }
 }
 
 void Dattorro1997Tank::rescaleApfAndDelayTimes() {
