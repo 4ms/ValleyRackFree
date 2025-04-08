@@ -26,8 +26,6 @@
 #include "../timers/Metronome.hpp"
 #include "../timers/Oneshot.hpp"
 #include "../Topograph/TopographPatternGenerator.hpp"
-#include <iomanip> // setprecision
-#include <sstream> // stringstream
 #include <ctime>
 
 struct UGraph : Module {
@@ -845,14 +843,13 @@ void UGraphWidget::step() {
 
     // Panel text
     auto floatToTempoText = [](float a){
-        // std::stringstream stream;
-        // stream << std::fixed << std::setprecision(1) << a;
-        // if (a >= 40.0) {
-        //     return stream.str();
-        // }
-        // std::string out = "Ext.";
-        // return out;
-		return "";
+		char buf[20];
+		if (a >= 40.0)
+			snprintf(buf, 20, "%.1f", a);
+		else
+			strcpy(buf, "Ext.");
+
+		return std::string(buf);
     };
 
     auto floatToEuclideanText = [](float a) -> std::string {
