@@ -28,6 +28,7 @@
 #include "../Topograph/TopographPatternGenerator.hpp"
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
+#include <ctime>
 
 struct UGraph : Module {
     enum ParamIds {
@@ -778,6 +779,20 @@ struct UGraphRunModeItem : MenuItem {
 void UGraphWidget::appendContextMenu(Menu *menu) {
     UGraph *module = dynamic_cast<UGraph*>(this->module);
     assert(module);
+
+	// Seq Mode
+	menu->addChild(createIndexSubmenuItem("Seq. Mode",
+		{"Original", "Henri", "Euclid"},
+		[module]() { return module ? module->sequencerModeChoice : 0; },
+		[module](int mode) { if (module) module->sequencerModeChoice = mode; }
+	));
+
+	// PPQN
+	menu->addChild(createIndexSubmenuItem("Clock Resolution",
+		{"4 PPQN", "8 PPQN", "24 PPQN"},
+		[module]() { return module ? module->clockResChoice : 0; },
+		[module](int mode) { if (module) module->clockResChoice = mode; }
+	));
 
     // Panel style
     menu->addChild(construct<MenuLabel>());
