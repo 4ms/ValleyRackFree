@@ -16,6 +16,10 @@ DigitalDisplay::DigitalDisplay(unsigned long maxDisplayLength) {
     size = 16;
     displayLength = maxDisplayLength;
     backDigits = std::string(maxDisplayLength, '~');
+#ifdef METAMODULE
+	// Set box height for MM pixel buffer
+	box.size.y = size + 6;
+#endif
 }
 
 void DigitalDisplay::drawLayer(const DrawArgs &args, int layer) {
@@ -25,14 +29,17 @@ void DigitalDisplay::drawLayer(const DrawArgs &args, int layer) {
             nvgFontSize(args.vg, size);
             nvgFontFaceId(args.vg, font->handle);
             nvgTextLetterSpacing(args.vg, 0.f);
+#ifndef METAMODULE
             nvgFillColor(args.vg, colours.bgColour);
             nvgTextAlign(args.vg, horzAlignment | vertAlignment);
             nvgText(args.vg, 0.f, 0.f, backDigits.c_str(), NULL);
+#endif
 
             nvgFillColor(args.vg, colours.colour);
             nvgTextAlign(args.vg, horzAlignment | vertAlignment);
             nvgText(args.vg, 0.f, 0.f, text.c_str(), NULL);
 
+#ifndef METAMODULE
             nvgFillColor(args.vg, colours.blur1Colour);
             nvgTextAlign(args.vg, horzAlignment | vertAlignment);
             nvgFontBlur(args.vg, blur1);
@@ -42,6 +49,7 @@ void DigitalDisplay::drawLayer(const DrawArgs &args, int layer) {
             nvgTextAlign(args.vg, horzAlignment | vertAlignment);
             nvgFontBlur(args.vg, blur2);
             nvgText(args.vg, 0.f, 0.f, text.c_str(), NULL);
+#endif
         }
     }
     Widget::drawLayer(args, layer);
