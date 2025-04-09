@@ -6,6 +6,7 @@
 //
 
 #include "Topograph.hpp"
+#include <charconv>
 
 Topograph::Topograph() {
 	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -612,14 +613,13 @@ void TopographWidget::step() {
 
     // Panel text
     auto floatToTempoText = [](float a){
-        // std::stringstream stream;
-        // stream << std::fixed << std::setprecision(1) << a;
-        // if(a >= 40.0) {
-        //     return stream.str();
-        // }
-        // std::string out = "Ext.";
-        // return out;
-		return "";
+		std::string buf(8, '\0');
+		if (a >= 40.0)
+			std::to_chars(buf.data(), buf.data() + buf.size(), a, std::chars_format::fixed, 1);
+		else
+			buf = "Ext.";
+
+		return buf;
     };
 
     auto floatToEuclideanText = [](float a) -> std::string {
