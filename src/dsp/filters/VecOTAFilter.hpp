@@ -9,7 +9,11 @@
 #define VEC_OTA_FILTER_HPP
 
 #include <cmath>
+
+#ifndef G_TABLE_SIZE
 #define G_TABLE_SIZE 1100000
+#endif
+
 #define TANH_TABLE_SIZE 8192
 #include "../../simd/SIMDUtilities.hpp"
 #include "../../utilities/Utilities.hpp"
@@ -157,6 +161,12 @@ protected:
     float _sampleRate = 44100.f;
 
     void calcInternalGTable();
+
+	static constexpr float OctaveMin = -5.f;
+	static constexpr float OctaveRange = 11.f;
+	static constexpr float TableIndexPerOctave = G_TABLE_SIZE / OctaveRange;
+	static constexpr float TableIndexMinOctave = OctaveMin * TableIndexPerOctave; 
+
 };
 
 #endif /* OTAFilter_hpp */
