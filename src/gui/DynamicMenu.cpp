@@ -111,7 +111,7 @@ void DynamicMenu::draw(const DrawArgs &args) {
         return;
     }
 
-    std::shared_ptr<Font> font = APP->window->loadFont(asset::plugin(pluginInstance, "res/din1451alt.ttf"));
+    std::shared_ptr<Font> font = APP->window->loadFont(asset::plugin(valleyPluginInstance, "res/din1451alt.ttf"));
     if (font) {
         nvgFontSize(args.vg, _textSize);
         nvgFontFaceId(args.vg, font->handle);
