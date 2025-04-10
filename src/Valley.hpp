@@ -13,6 +13,7 @@ using namespace rack;
 #define TFORM_WAVELENGTH_CAP 256
 
 extern Plugin *pluginInstance;
+extern Plugin *valleyPluginInstance;
 
 ////////////////////
 // module widgets

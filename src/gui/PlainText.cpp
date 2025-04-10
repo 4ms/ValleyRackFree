@@ -10,7 +10,11 @@ PlainText::PlainText() {
 void PlainText::draw(const DrawArgs &args) {
     std::shared_ptr<Font> font;
     if (!fontPath.empty()) {
+#ifdef METAMODULE
+        font = APP->window->loadFont(asset::plugin(valleyPluginInstance, fontPath));
+#else
         font = APP->window->loadFont(asset::plugin(pluginInstance, fontPath));
+#endif
     }
 
     if (font) {
