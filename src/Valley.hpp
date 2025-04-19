@@ -1,3 +1,7 @@
+#if defined(SIMULATOR)
+#include "simd/SIMDUtilities.hpp"
+#endif
+
 #include "rack.hpp"
 #define VALLEY_VERSION 204
 #define DR_WAV_IMPLEMENTATION
