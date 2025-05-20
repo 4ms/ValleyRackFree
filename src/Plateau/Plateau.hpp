@@ -182,6 +182,7 @@ struct Plateau : Module {
 
     bool clear = false;
     bool cleared = true;
+    bool clearing_buffers = false;
     bool fadeOut = false;
     bool fadeIn = false;
 

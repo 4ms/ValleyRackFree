@@ -171,6 +171,33 @@ void Dattorro1997Tank::setDiffusion(const FLOAT diffusion) {
     rightApf2.setGain(diffusion2);
 }
 
+
+bool Dattorro1997Tank::clear_step(unsigned clear_block) {
+    bool all_done = true;
+
+    all_done &= leftApf1.clear_step(clear_block);
+    all_done &= leftDelay1.clear_step(clear_block);
+    leftHighCutFilter.clear();
+    leftLowCutFilter.clear();
+    all_done &= leftApf2.clear_step(clear_block);
+    all_done &= leftDelay2.clear_step(clear_block);
+
+    all_done &= rightApf1.clear_step(clear_block);
+    all_done &= rightDelay1.clear_step(clear_block);
+    rightHighCutFilter.clear();
+    rightLowCutFilter.clear();
+    all_done &= rightApf2.clear_step(clear_block);
+    all_done &= rightDelay2.clear_step(clear_block);
+
+    leftOutDCBlock.clear();
+    rightOutDCBlock.clear();
+
+    leftSum = 0.0;
+    rightSum = 0.0;
+
+    return all_done;
+}
+
 void Dattorro1997Tank::clear() {
     leftApf1.clear();
     leftDelay1.clear();
@@ -297,6 +324,34 @@ void Dattorro::process(FLOAT leftInput, FLOAT rightInput) {
     tankFeed = preDelay.output * (1.0 - diffuseInput) + inApf4.process() * diffuseInput;
 
     tank.process(tankFeed, tankFeed, &leftOut, &rightOut);
+}
+
+
+void Dattorro::clear_start() {
+    clear_block_ctr = 0;
+}
+
+// Amortize clearing buffers over a few thousand sample frames
+bool Dattorro::clear_step() {
+    // Always keep these cleared: it's fast
+    leftInputDCBlock.clear();
+    rightInputDCBlock.clear();
+    inputLpf.clear();
+    inputHpf.clear();
+
+    auto all_done = true;
+
+    // Clear these largeer buffers in blocks
+    all_done &= preDelay.clear_step(clear_block_ctr);
+    all_done &= inApf1.clear_step(clear_block_ctr);
+    all_done &= inApf2.clear_step(clear_block_ctr);
+    all_done &= inApf3.clear_step(clear_block_ctr);
+    all_done &= inApf4.clear_step(clear_block_ctr);
+    all_done &= tank.clear_step(clear_block_ctr);
+
+    clear_block_ctr++;
+
+    return all_done;
 }
 
 void Dattorro::clear() {

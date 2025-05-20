@@ -42,6 +42,7 @@ public:
     void setDiffusion(const FLOAT diffusion);
 
     void clear();
+    bool clear_step(unsigned clear_block);
 
 private:
     static constexpr FLOAT dattorroSampleRate = 29761.0;
@@ -172,6 +173,8 @@ public:
              const FLOAT initMaxTimeScale = 1.0);
     void process(FLOAT leftInput, FLOAT rightInput);
     void clear();
+    void clear_start();
+    bool clear_step();
 
     void setTimeScale(FLOAT timeScale);
     void setPreDelay(FLOAT time);
@@ -230,6 +233,8 @@ private:
     Dattorro1997Tank tank;
 
     FLOAT tankFeed = 0.0;
+
+    unsigned clear_block_ctr = 0;
 
     FLOAT dattorroScale(FLOAT delayTime);
 };

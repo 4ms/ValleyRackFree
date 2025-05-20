@@ -2,7 +2,7 @@
 #include "utilities/math_lut.hh"
 
     Plateau::Plateau() : reverb(192000, 16, sizeMax) {
-	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+    config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
     configParam(Plateau::DRY_PARAM, 0.0f, 1.f, 1.f, "Dry level", "%", 0.f,
                 100.f);
     configParam(Plateau::WET_PARAM, 0.0f, 1.f, 0.5f, "Wet level", "%", 0.f,
@@ -163,6 +163,7 @@ void Plateau::getParameters() {
         inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f) && !clear && cleared) {
         cleared = false;
         clear = true;
+        clearing_buffers = false;
     }
     else if((params[CLEAR_PARAM].getValue() <= 0.5f
              && inputs[CLEAR_CV_INPUT].getVoltage() <= 0.5f) && cleared) {
@@ -170,17 +171,23 @@ void Plateau::getParameters() {
     }
 
     if(clear) {
-        if(!cleared && !fadeOut && !fadeIn) {
+        if(!cleared && !fadeOut && !clearing_buffers && !fadeIn) {
             fadeOut = true;
             envelope.setStartEndPoints(1.f, 0.f);
             envelope.trigger();
         }
         if(fadeOut && envelope._justFinished) {
-            reverb.clear();
+            reverb.clear_start();
             fadeOut = false;
-            fadeIn = true;
-            envelope.setStartEndPoints(0.f, 1.f);
-            envelope.trigger();
+            clearing_buffers = true;
+        }
+        if (clearing_buffers) {
+            if (reverb.clear_step()) {
+                fadeIn = true;
+                clearing_buffers = false;
+                envelope.setStartEndPoints(0.f, 1.f);
+                envelope.trigger();
+            }
         }
         if(fadeIn && envelope._justFinished) {
             fadeIn = false;

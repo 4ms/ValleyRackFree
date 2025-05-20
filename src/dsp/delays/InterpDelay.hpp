@@ -14,6 +14,7 @@
 
 template<typename T = float, typename IntT = int32_t>
 class InterpDelay {
+    static constexpr unsigned ClearBlockSize = 32;
 public:
     T input = T(0);
     T output = T(0);
@@ -30,7 +31,7 @@ public:
         assert(w < l);
         buffer[w] = input;
         IntT r = w - t;
-        
+
         if (r < 0) {
             r += l;
         }
@@ -74,6 +75,19 @@ public:
         std::fill(buffer.begin(), buffer.end(), T(0));
         input = T(0);
         output = T(0);
+    }
+
+    bool clear_step(unsigned block) {
+        if (block * ClearBlockSize >= buffer.size())
+            return true;
+        else {
+            auto start = block * ClearBlockSize;
+            auto end = std::min((block + 1) * ClearBlockSize, buffer.size());
+            std::fill(&buffer[start], &buffer[end], T(0));
+            input = T(0);
+            output = T(0);
+            return (end == buffer.size());
+        }
     }
 
 private:

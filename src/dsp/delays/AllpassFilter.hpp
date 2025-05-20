@@ -38,6 +38,14 @@ public:
         delay.clear();
     }
 
+    bool clear_step(unsigned block) {
+        input = 0;
+        output = 0;
+        _inSum = 0;
+        _outSum = 0;
+        return delay.clear_step(block);
+    }
+
     void setGain(const T newGain) {
         assert(newGain >= -1.0);
         assert(newGain <= 1.0);
