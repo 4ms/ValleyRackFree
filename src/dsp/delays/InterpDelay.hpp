@@ -82,7 +82,7 @@ public:
             return true;
         else {
             auto start = block * ClearBlockSize;
-            auto end = std::min((block + 1) * ClearBlockSize, buffer.size());
+            auto end = std::min<size_t>((block + 1) * ClearBlockSize, buffer.size());
             std::fill(&buffer[start], &buffer[end], T(0));
             input = T(0);
             output = T(0);
