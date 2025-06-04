@@ -226,9 +226,15 @@ struct AmalgamWidget : ModuleWidget {
     Vec zRightPulse2OutputPos = Vec(124.654, 319.2);
 
     Vec DCCoupleLightPos = Vec(59.044, 31.775);
-    Vec modeDisplayPos = Vec(75.0, 95.5);
-    Vec paramADisplayPos = Vec(75, 177);
-    Vec paramBDisplayPos = Vec(75, 249);
+#ifdef METAMODULE
+    Rect modeDisplayBox = {Vec(25, 95.5), Vec(100, 22)};
+    Rect paramADisplayBox = {Vec(25, 177), Vec(100, 22)};
+    Rect paramBDisplayBox = {Vec(25, 249), Vec(100, 22)};
+#else
+    Rect modeDisplayBox = {Vec(75, 95.5), Vec(100, 22)};
+    Rect paramADisplayBox = {Vec(75, 177), Vec(100, 22)};
+    Rect paramBDisplayBox = {Vec(75, 249), Vec(100, 22)};
+#endif
     DigitalDisplay* digitalDisplay;
     DigitalDisplay* modeDisplay;
     DigitalDisplay* paramADisplay;

@@ -16,10 +16,6 @@ DigitalDisplay::DigitalDisplay(unsigned long maxDisplayLength) {
     size = 16;
     displayLength = maxDisplayLength;
     backDigits = std::string(maxDisplayLength, '~');
-#ifdef METAMODULE
-	// Set box height for MM pixel buffer
-	box.size.y = size + 6;
-#endif
 }
 
 void DigitalDisplay::drawLayer(const DrawArgs &args, int layer) {
@@ -37,7 +33,11 @@ void DigitalDisplay::drawLayer(const DrawArgs &args, int layer) {
 
             nvgFillColor(args.vg, colours.colour);
             nvgTextAlign(args.vg, horzAlignment | vertAlignment);
+#if defined(METAMODULE)
+            nvgText(args.vg, box.size.x / 2, 0.f, text.c_str(), NULL);
+#else
             nvgText(args.vg, 0.f, 0.f, text.c_str(), NULL);
+#endif
 
 #ifndef METAMODULE
             nvgFillColor(args.vg, colours.blur1Colour);

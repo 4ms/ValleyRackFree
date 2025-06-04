@@ -292,19 +292,19 @@ AmalgamWidget::AmalgamWidget(Amalgam* module) {
     addParam(createParam<RoganSmallBlue>(paramBCV2KnobPos, module, Amalgam::PARAM_B_CV2_PARAM));
 
     modeDisplay = new DigitalDisplay;
-    modeDisplay->box.pos = modeDisplayPos;
+    modeDisplay->box = modeDisplayBox;
     modeDisplay->size = 13;
     modeDisplay->setText("NVRGONNA");
     addChild(modeDisplay);
 
     paramADisplay = new DigitalDisplay;
-    paramADisplay->box.pos = paramADisplayPos;
+    paramADisplay->box = paramADisplayBox;
     paramADisplay->size = 12;
     paramADisplay->setText("GIVE YOU");
     addChild(paramADisplay);
 
     paramBDisplay = new DigitalDisplay;
-    paramBDisplay->box.pos = paramBDisplayPos;
+    paramBDisplay->box = paramBDisplayBox;
     paramBDisplay->size = 12;
     paramBDisplay->setText("UP");
     addChild(paramBDisplay);
