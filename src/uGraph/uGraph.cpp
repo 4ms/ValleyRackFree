@@ -638,6 +638,10 @@ UGraphWidget::UGraphWidget(UGraph *module) {
     // Tempo text
     tempoText = new PlainText;
     tempoText->box.pos = Vec(53, 66.75);
+#ifdef METAMODULE
+    tempoText->box.pos -= Vec(30, 0);
+    tempoText->box.size = Vec(60, 20);
+#endif
     tempoText->size = 14;
     tempoText->fontPath = fontPath;
     tempoText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -647,6 +651,10 @@ UGraphWidget::UGraphWidget(UGraph *module) {
     // Map Text
     mapXText = new PlainText;
     mapXText->box.pos = Vec(53, 163);
+#ifdef METAMODULE
+    mapXText->box.pos -= Vec(30, 0);
+    mapXText->box.size = Vec(60, 20);
+#endif
     mapXText->size = 14;
     mapXText->fontPath = fontPath;
     mapXText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -655,6 +663,10 @@ UGraphWidget::UGraphWidget(UGraph *module) {
 
     mapYText = new PlainText;
     mapYText->box.pos = Vec(89, 163);
+#ifdef METAMODULE
+    mapYText->box.pos -= Vec(30, 0);
+    mapYText->box.size = Vec(60, 20);
+#endif
     mapYText->size = 14;
     mapYText->fontPath = fontPath;
     mapYText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -664,6 +676,10 @@ UGraphWidget::UGraphWidget(UGraph *module) {
     // Chaos Text
     chaosText = new PlainText;
     chaosText->box.pos = Vec(125, 163);
+#ifdef METAMODULE
+    chaosText->box.pos -= Vec(30, 0);
+    chaosText->box.size = Vec(60, 20);
+#endif
     chaosText->size = 14;
     chaosText->fontPath = fontPath;
     chaosText->color = nvgRGB(0xFF, 0xFF, 0xFF);

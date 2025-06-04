@@ -366,6 +366,10 @@ TopographWidget::TopographWidget(Topograph *module) {
     // Tempo text
     tempoText = new PlainText;
     tempoText->box.pos = Vec(69, 83);
+#ifdef METAMODULE
+    tempoText->box.pos.x -= 30;
+    tempoText->box.size = Vec(60, 20);
+#endif
     tempoText->size = 14;
     tempoText->fontPath = fontPath;
     tempoText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -375,6 +379,10 @@ TopographWidget::TopographWidget(Topograph *module) {
     // Map Text
     mapXText = new PlainText;
     mapXText->box.pos = Vec(27.1, 208.5);
+#ifdef METAMODULE
+    mapXText->box.pos.x -= 30;
+    mapXText->box.size = Vec(60, 20);
+#endif
     mapXText->size = 14;
     mapXText->fontPath = fontPath;
     mapXText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -383,6 +391,10 @@ TopographWidget::TopographWidget(Topograph *module) {
 
     mapYText = new PlainText;
     mapYText->box.pos = Vec(27.1, 268.5);
+#ifdef METAMODULE
+    mapYText->box.pos.x -= 30;
+    mapYText->box.size = Vec(60, 20);
+#endif
     mapYText->size = 14;
     mapYText->fontPath = fontPath;
     mapYText->color = nvgRGB(0xFF, 0xFF, 0xFF);
@@ -392,6 +404,10 @@ TopographWidget::TopographWidget(Topograph *module) {
     // Chaos Text
     chaosText = new PlainText;
     chaosText->box.pos = Vec(27.1, 329);
+#ifdef METAMODULE
+    chaosText->box.pos.x -= 30;
+    chaosText->box.size = Vec(60, 20);
+#endif
     chaosText->size = 14;
     chaosText->fontPath = fontPath;
     chaosText->color = nvgRGB(0xFF, 0xFF, 0xFF);

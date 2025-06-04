@@ -23,7 +23,12 @@ void PlainText::draw(const DrawArgs &args) {
         nvgTextLetterSpacing(args.vg, 0.f);
         nvgFillColor(args.vg, color);
         nvgTextAlign(args.vg, horzAlignment | vertAlignment);
-        nvgText(args.vg, 0.f, 0.f, text.c_str(), NULL);
+#if METAMODULE
+		if (horzAlignment & NVG_ALIGN_CENTER)
+			nvgText(args.vg, box.size.x / 2, 0.f, text.c_str(), NULL);
+		else
+#endif
+			nvgText(args.vg, 0.f, 0.f, text.c_str(), NULL);
     }
     Widget::draw(args);
 }
