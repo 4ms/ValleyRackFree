@@ -1295,14 +1295,14 @@ DexterWidget::DexterWidget(Dexter *module) {
         syncModeChoice[op] = new OpSyncModeChoice;
         syncModeChoice[op]->box.pos = Vec(238.819 + offset, 55.25);
         syncModeChoice[op]->box.size.x = 67.806;
-        syncModeChoice[op]->pSyncMode = &module->opMenuSyncMode[op];
+        syncModeChoice[op]->pSyncMode = module ? &module->opMenuSyncMode[op] : nullptr;
         syncModeChoice[op]->visible = false;
         addChild(syncModeChoice[op]);
 
         shapeModeChoice[op] = new OpShapeModeChoice;
         shapeModeChoice[op]->box.pos = Vec(238.819 + offset, 87.125);
         shapeModeChoice[op]->box.size.x = 67.806;
-        shapeModeChoice[op]->pShapeMode = &module->opMenuShapeMode[op];
+        shapeModeChoice[op]->pShapeMode = module ? &module->opMenuShapeMode[op] : nullptr;
         shapeModeChoice[op]->visible = false;
         addChild(shapeModeChoice[op]);
 
@@ -1347,28 +1347,28 @@ DexterWidget::DexterWidget(Dexter *module) {
         mod1ModeChoice[op] = new OpModModeChoice;
         mod1ModeChoice[op]->box.pos = Vec(226.f + offset, 55.25f);
         mod1ModeChoice[op]->box.size.x = 80.f;
-        mod1ModeChoice[op]->pModMode = &module->opMod1Assign[op];
+        mod1ModeChoice[op]->pModMode = module ? &module->opMod1Assign[op] : nullptr;
         mod1ModeChoice[op]->visible = false;
         addChild(mod1ModeChoice[op]);
 
         mod2ModeChoice[op] = new OpModModeChoice;
         mod2ModeChoice[op]->box.pos = Vec(226.f + offset,  87.125f);
         mod2ModeChoice[op]->box.size.x = 80.f;
-        mod2ModeChoice[op]->pModMode = &module->opMod2Assign[op];
+        mod2ModeChoice[op]->pModMode = module ? &module->opMod2Assign[op] : nullptr;
         mod2ModeChoice[op]->visible = false;
         addChild(mod2ModeChoice[op]);
 
         mod3ModeChoice[op] = new OpModModeChoice;
         mod3ModeChoice[op]->box.pos = Vec(226.f + offset, 55.25f);
         mod3ModeChoice[op]->box.size.x = 80.f;
-        mod3ModeChoice[op]->pModMode = &module->opMod3Assign[op];
+        mod3ModeChoice[op]->pModMode = module ? &module->opMod3Assign[op] : nullptr;
         mod3ModeChoice[op]->visible = false;
         addChild(mod3ModeChoice[op]);
 
         mod4ModeChoice[op] = new OpModModeChoice;
         mod4ModeChoice[op]->box.pos = Vec(226.f + offset, 87.125f);
         mod4ModeChoice[op]->box.size.x = 80.f;
-        mod4ModeChoice[op]->pModMode = &module->opMod4Assign[op];
+        mod4ModeChoice[op]->pModMode = module ? &module->opMod4Assign[op] : nullptr;
         mod4ModeChoice[op]->visible = false;
         addChild(mod4ModeChoice[op]);
 
