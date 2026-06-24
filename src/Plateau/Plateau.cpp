@@ -109,30 +109,36 @@ void Plateau::process(const ProcessArgs &args) {
     reverb.setTankModDepth(modDepth);
     reverb.setTankModShape(modShape);
 
-	// Reverse reverb: double-buffer feeding time-reversed audio into the tank.
-	// While bufA fills forward, bufB plays in reverse into the reverb; then swap.
-	// One full buffer (1 second) passes before reversed content appears — same
-	// latency as any real-time reverse reverb implementation.
+	// Reverse reverb: overlap-add of two time-reversed grains feeding the tank.
+	// Input is recorded continuously into a circular buffer (length 2*grain).
+	// Two grains read it backwards, offset by half a grain, and are crossfaded
+	// with a power-complementary sine window. Because recording is seamless and
+	// the two grains overlap, a sound never straddles a hard block boundary, so
+	// it plays back exactly once with near-constant latency.
 	float rvbInL = leftInput * minus20dBGain * inputSensitivity * envelope._value;
 	float rvbInR = rightInput * minus20dBGain * inputSensitivity * envelope._value;
 
 	if (reverseState) {
-		auto& fillL = revFillA ? revBufAL : revBufBL;
-		auto& fillR = revFillA ? revBufAR : revBufBR;
-		auto& readL = revFillA ? revBufBL : revBufAL;
-		auto& readR = revFillA ? revBufBR : revBufAR;
+		const int N = revGrainLen;
+		const int M = (int)revBufL.size(); // == 2 * N
 
-		fillL[revPhase] = rvbInL;
-		fillR[revPhase] = rvbInR;
+		// Record current input into the circular buffer.
+		revBufL[revWrite] = rvbInL;
+		revBufR[revWrite] = rvbInR;
 
-		int readPos = revBufLen - 1 - revPhase;
-		rvbInL = readL[readPos];
-		rvbInR = readR[readPos];
+		// Two reversed read heads, anchored half a grain apart.
+		int r0 = revAnchor0 - revT0; if (r0 < 0) r0 += M;
+		int r1 = revAnchor1 - revT1; if (r1 < 0) r1 += M;
+		const float w0 = revWindow[revT0];
+		const float w1 = revWindow[revT1];
+		rvbInL = w0 * revBufL[r0] + w1 * revBufL[r1];
+		rvbInR = w0 * revBufR[r0] + w1 * revBufR[r1];
 
-		if (++revPhase >= revBufLen) {
-			revPhase = 0;
-			revFillA = !revFillA;
-		}
+		// Advance write head, then grains. Each grain re-anchors to the newest
+		// sample at the end of its window, where its window gain is 0 (no click).
+		if (++revWrite >= M) revWrite = 0;
+		if (++revT0 >= N) { revT0 = 0; revAnchor0 = revWrite; }
+		if (++revT1 >= N) { revT1 = 0; revAnchor1 = revWrite; }
 	}
 
     reverb.process(rvbInL, rvbInR);
@@ -339,15 +345,26 @@ void Plateau::onSampleRateChange() {
     reverb.setSampleRate(sr);
     envelope.setSampleRate(sr);
 
-	// 1-second reverse window	
-	revBufLen = (int)sr;  
-	// Clear reverse buffers, reset state
-	revBufAL.assign(revBufLen, 0.f);
-	revBufAR.assign(revBufLen, 0.f);
-	revBufBL.assign(revBufLen, 0.f);
-	revBufBR.assign(revBufLen, 0.f);
-	revPhase = 0;
-	revFillA = true;
+	// 1-second grain; circular record buffer is twice that so the reversed read
+	// heads never collide with the write head within a grain.
+	revGrainLen = (int)sr;
+	const int M = 2 * revGrainLen;
+
+	// Clear reverse buffers, reset state.
+	revBufL.assign(M, 0.f);
+	revBufR.assign(M, 0.f);
+
+	// Power-complementary (sine) window: win(t)^2 + win(t + N/2)^2 == 1, so two
+	// grains offset by half a window sum to unity gain.
+	revWindow.resize(revGrainLen);
+	for (int i = 0; i < revGrainLen; ++i)
+		revWindow[i] = std::sin((float)M_PI * (float)i / (float)revGrainLen);
+
+	revWrite   = 0;
+	revT0      = 0;
+	revAnchor0 = 0;
+	revT1      = revGrainLen / 2;            // second grain leads by half a window
+	revAnchor1 = M - revGrainLen / 2;        // keeps anchor == (write - t) mod M
 }
 
 json_t* Plateau::dataToJson()  {

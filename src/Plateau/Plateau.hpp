@@ -198,11 +198,17 @@ struct Plateau : Module {
     int tuned = 0;
     int diffuseInput = 1;
 
-    // Reverse Mode:
-    std::vector<float> revBufAL, revBufAR, revBufBL, revBufBR;
-    int  revPhase  = 0;
-    int  revBufLen = 48000;
-    bool revFillA  = true;
+    // Reverse Mode (overlap-add, two crossfaded reversed grains):
+    // Continuous circular record buffer of length 2*revGrainLen. Two grains of
+    // length revGrainLen read it backwards, offset by half a grain, summed with
+    // a power-complementary (sine) window so there is no hard block boundary for
+    // a sound to straddle. Latency is ~constant and each input plays back once.
+    std::vector<float> revBufL, revBufR;   // circular record, length 2*revGrainLen
+    std::vector<float> revWindow;          // sine window, length revGrainLen
+    int  revGrainLen = 48000;              // grain/window length (~1 s)
+    int  revWrite    = 0;                  // write index into record buffer
+    int  revT0 = 0,      revT1 = 0;        // per-grain local time, 0..revGrainLen-1
+    int  revAnchor0 = 0, revAnchor1 = 0;   // record index each grain anchored at
     bool reverseState = false;
 
     Plateau();
