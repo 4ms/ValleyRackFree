@@ -109,8 +109,33 @@ void Plateau::process(const ProcessArgs &args) {
     reverb.setTankModDepth(modDepth);
     reverb.setTankModShape(modShape);
 
-    reverb.process(leftInput * minus20dBGain * inputSensitivity * envelope._value,
-                   rightInput * minus20dBGain * inputSensitivity * envelope._value);
+	// Reverse reverb: double-buffer feeding time-reversed audio into the tank.
+	// While bufA fills forward, bufB plays in reverse into the reverb; then swap.
+	// One full buffer (1 second) passes before reversed content appears — same
+	// latency as any real-time reverse reverb implementation.
+	float rvbInL = leftInput * minus20dBGain * inputSensitivity * envelope._value;
+	float rvbInR = rightInput * minus20dBGain * inputSensitivity * envelope._value;
+
+	if (reverseState) {
+		auto& fillL = revFillA ? revBufAL : revBufBL;
+		auto& fillR = revFillA ? revBufAR : revBufBR;
+		auto& readL = revFillA ? revBufBL : revBufAL;
+		auto& readR = revFillA ? revBufBR : revBufAR;
+
+		fillL[revPhase] = rvbInL;
+		fillR[revPhase] = rvbInR;
+
+		int readPos = revBufLen - 1 - revPhase;
+		rvbInL = readL[readPos];
+		rvbInR = readR[readPos];
+
+		if (++revPhase >= revBufLen) {
+			revPhase = 0;
+			revFillA = !revFillA;
+		}
+	}
+
+    reverb.process(rvbInL, rvbInR);
 
     leftOutput = leftInput * dry + reverb.getLeftOutput() * wet *
                  envelope._value;
@@ -158,43 +183,47 @@ void Plateau::getParameters() {
         reverb.freeze(frozen);
     }
 
-    // Clear
-    if((params[CLEAR_PARAM].getValue() > 0.5f ||
-        inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f) && !clear && cleared) {
-        cleared = false;
-        clear = true;
-        clearing_buffers = false;
-    }
-    else if((params[CLEAR_PARAM].getValue() <= 0.5f
-             && inputs[CLEAR_CV_INPUT].getVoltage() <= 0.5f) && cleared) {
-        clear = false;
-    }
+	reverseState = params[CLEAR_PARAM].getValue() > 0.5f || inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f;
+	clear = reverseState; //for the led
 
-    if(clear) {
-        if(!cleared && !fadeOut && !clearing_buffers && !fadeIn) {
-            fadeOut = true;
-            envelope.setStartEndPoints(1.f, 0.f);
-            envelope.trigger();
-        }
-        if(fadeOut && envelope._justFinished) {
-            reverb.clear_start();
-            fadeOut = false;
-            clearing_buffers = true;
-        }
-        if (clearing_buffers) {
-            if (reverb.clear_step()) {
-                fadeIn = true;
-                clearing_buffers = false;
-                envelope.setStartEndPoints(0.f, 1.f);
-                envelope.trigger();
-            }
-        }
-        if(fadeIn && envelope._justFinished) {
-            fadeIn = false;
-            cleared = true;
-            envelope._value = 1.f;
-        }
-    }
+    // Clear
+    // if((params[CLEAR_PARAM].getValue() > 0.5f ||
+    //     inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f) && !clear && cleared) {
+    //     cleared = false;
+    //     clear = true;
+    //     clearing_buffers = false;
+    // }
+    // else if((params[CLEAR_PARAM].getValue() <= 0.5f
+    //          && inputs[CLEAR_CV_INPUT].getVoltage() <= 0.5f) && cleared) {
+    //     clear = false;
+    // }
+
+    // if(clear) {
+        // if(!cleared && !fadeOut && !clearing_buffers && !fadeIn) {
+        //     fadeOut = true;
+        //     envelope.setStartEndPoints(1.f, 0.f);
+        //     envelope.trigger();
+        // }
+        // if(fadeOut && envelope._justFinished) {
+        //     reverb.clear_start();
+        //     fadeOut = false;
+        //     clearing_buffers = true;
+        // }
+        // if (clearing_buffers) {
+        //     if (reverb.clear_step()) {
+        //         fadeIn = true;
+        //         clearing_buffers = false;
+        //         envelope.setStartEndPoints(0.f, 1.f);
+        //         envelope.trigger();
+        //     }
+        // }
+        // if(fadeIn && envelope._justFinished) {
+        //     fadeIn = false;
+        //     cleared = true;
+        //     envelope._value = 1.f;
+        // }
+    // }
+
     envelope.process();
 
     // CV
@@ -306,8 +335,19 @@ void Plateau::setLights() {
 }
 
 void Plateau::onSampleRateChange() {
-    reverb.setSampleRate(APP->engine->getSampleRate());
-    envelope.setSampleRate(APP->engine->getSampleRate());
+	auto sr = APP->engine->getSampleRate();
+    reverb.setSampleRate(sr);
+    envelope.setSampleRate(sr);
+
+	// 1-second reverse window	
+	revBufLen = (int)sr;  
+	// Clear reverse buffers, reset state
+	revBufAL.assign(revBufLen, 0.f);
+	revBufAR.assign(revBufLen, 0.f);
+	revBufBL.assign(revBufLen, 0.f);
+	revBufBR.assign(revBufLen, 0.f);
+	revPhase = 0;
+	revFillA = true;
 }
 
 json_t* Plateau::dataToJson()  {

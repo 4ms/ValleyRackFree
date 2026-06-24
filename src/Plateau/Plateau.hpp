@@ -198,6 +198,13 @@ struct Plateau : Module {
     int tuned = 0;
     int diffuseInput = 1;
 
+    // Reverse Mode:
+    std::vector<float> revBufAL, revBufAR, revBufBL, revBufBR;
+    int  revPhase  = 0;
+    int  revBufLen = 48000;
+    bool revFillA  = true;
+    bool reverseState = false;
+
     Plateau();
 
     void process(const ProcessArgs &args) override;
