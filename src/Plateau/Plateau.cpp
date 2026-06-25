@@ -108,8 +108,52 @@ void Plateau::process(const ProcessArgs &args) {
     reverb.setTankModDepth(modDepth);
     reverb.setTankModShape(modShape);
 
-    reverb.process(leftInput * minus20dBGain * inputSensitivity * envelope._value,
-                   rightInput * minus20dBGain * inputSensitivity * envelope._value);
+	// Reverse reverb: overlap-add of two time-reversed grains feeding the tank.
+	// Input is recorded continuously into a circular buffer (length 2*grain).
+	// Two grains read it backwards, offset by half a grain, and are crossfaded
+	// with a power-complementary sine window. Because recording is seamless and
+	// the two grains overlap, a sound never straddles a hard block boundary, so
+	// it plays back exactly once with near-constant latency.
+	float rvbInL = leftInput * minus20dBGain * inputSensitivity * envelope._value;
+	float rvbInR = rightInput * minus20dBGain * inputSensitivity * envelope._value;
+
+	const int M = (int)revBufL.size(); // == 2 * revGrainLen (max)
+	const int N = revGrainEff;         // current grain length = reverse latency
+	const int half = N >> 1;
+	const int W = (int)revWindow.size();
+
+	// Record current input into the circular buffer.
+	revBufL[revWrite] = rvbInL;
+	revBufR[revWrite] = rvbInR;
+
+	if (reverseState) {
+		// Two reversed read heads from one master phase, half a grain apart.
+		int t0 = revPhase;
+		int t1 = (revPhase + half >= N) ? revPhase + half - N : revPhase + half;
+		int r0 = revAnchor0 >= t0 ? revAnchor0 - t0 : revAnchor0 + M - t0; 
+		int r1 = revAnchor1 >= t1 ? revAnchor1 - t1 : revAnchor1 + M - t1; 
+		const float w0 = revWindow[(t0 * W) / N];
+		const float w1 = revWindow[(t1 * W) / N];
+		rvbInL = w0 * revBufL[r0] + w1 * revBufL[r1];
+		rvbInR = w0 * revBufR[r0] + w1 * revBufR[r1];
+	}
+
+	// Advance write head and master phase. Each grain re-anchors to the
+	// newest sample at its own window edge (gain 0), so it is click-free.
+	// The new latency is latched at the master wrap; slewing the target
+	// keeps the per-wrap step on the other (mid-window) grain small.
+	if (++revWrite >= M) 
+		revWrite = 0;
+	++revPhase;
+	if (revPhase == half) 
+		revAnchor1 = revWrite;   // grain 1's window edge
+	if (revPhase >= N) {                            // grain 0's window edge
+		revPhase = 0;
+		revAnchor0 = revWrite;
+		revGrainEff = (int)revGrainTargetF;         // latch new latency
+	}
+
+    reverb.process(rvbInL, rvbInR);
 
     leftOutput = leftInput * dry + reverb.getLeftOutput() * wet *
                  envelope._value;
@@ -157,36 +201,39 @@ void Plateau::getParameters() {
         reverb.freeze(frozen);
     }
 
-    // Clear
-    if((params[CLEAR_PARAM].getValue() > 0.5f ||
-        inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f) && !clear && cleared) {
-        cleared = false;
-        clear = true;
-    }
-    else if((params[CLEAR_PARAM].getValue() <= 0.5f
-             && inputs[CLEAR_CV_INPUT].getVoltage() <= 0.5f) && cleared) {
-        clear = false;
-    }
+	reverseState = params[CLEAR_PARAM].getValue() > 0.5f || inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f;
+	clear = reverseState; //for the led
 
-    if(clear) {
-        if(!cleared && !fadeOut && !fadeIn) {
-            fadeOut = true;
-            envelope.setStartEndPoints(1.f, 0.f);
-            envelope.trigger();
-        }
-        if(fadeOut && envelope._justFinished) {
-            reverb.clear();
-            fadeOut = false;
-            fadeIn = true;
-            envelope.setStartEndPoints(0.f, 1.f);
-            envelope.trigger();
-        }
-        if(fadeIn && envelope._justFinished) {
-            fadeIn = false;
-            cleared = true;
-            envelope._value = 1.f;
-        }
-    }
+    // Clear
+    // if((params[CLEAR_PARAM].getValue() > 0.5f ||
+    //     inputs[CLEAR_CV_INPUT].getVoltage() > 0.5f) && !clear && cleared) {
+    //     cleared = false;
+    //     clear = true;
+    // }
+    // else if((params[CLEAR_PARAM].getValue() <= 0.5f
+    //          && inputs[CLEAR_CV_INPUT].getVoltage() <= 0.5f) && cleared) {
+    //     clear = false;
+    // }
+
+    // if(clear) {
+    //     if(!cleared && !fadeOut && !fadeIn) {
+    //         fadeOut = true;
+    //         envelope.setStartEndPoints(1.f, 0.f);
+    //         envelope.trigger();
+    //     }
+    //     if(fadeOut && envelope._justFinished) {
+    //         reverb.clear();
+    //         fadeOut = false;
+    //         fadeIn = true;
+    //         envelope.setStartEndPoints(0.f, 1.f);
+    //         envelope.trigger();
+    //     }
+    //     if(fadeIn && envelope._justFinished) {
+    //         fadeIn = false;
+    //         cleared = true;
+    //         envelope._value = 1.f;
+    //     }
+    // }
     envelope.process();
 
     // CV
@@ -197,6 +244,19 @@ void Plateau::getParameters() {
     preDelay = params[PRE_DELAY_PARAM].getValue();
     preDelay += 0.5f * (powf(2.f,inputs[PRE_DELAY_CV_INPUT].getVoltage() *
                              preDelayCVSens) - 1.f);
+
+    // In reverse mode, the pre-delay knob/CV instead sets the reverse latency
+    // (= grain length), and the reverb's own pre-delay is forced to 0. The knob
+    // is 0..0.5, so scale by 2 for a 0..1 control; CV adds on top.
+    if (reverseState) {
+        float revCtl = params[PRE_DELAY_PARAM].getValue() * 2.f
+                       + inputs[PRE_DELAY_CV_INPUT].getVoltage() * preDelayCVSens * 0.1f;
+        revCtl = clamp(revCtl, 0.f, 1.f);
+        float target = (float)revGrainMin + revCtl * (float)(revGrainLen - revGrainMin);
+        // Linear slew so steady knob == zero per-wrap change, moves stay bounded.
+        revGrainTargetF += clamp(target - revGrainTargetF, -revGrainSlew, revGrainSlew);
+        preDelay = 0.f;
+    }
 
     size = inputs[SIZE_CV_INPUT].getVoltage() *
            params[SIZE_CV_PARAM].getValue() * 0.1f;
@@ -298,8 +358,39 @@ void Plateau::setLights() {
 }
 
 void Plateau::onSampleRateChange() {
-    reverb.setSampleRate(APP->engine->getSampleRate());
-    envelope.setSampleRate(APP->engine->getSampleRate());
+	auto sr = APP->engine->getSampleRate();
+    reverb.setSampleRate(sr);
+    envelope.setSampleRate(sr);
+
+	// Max grain = 1 s; circular record buffer is twice that so the reversed read
+	// heads never collide with the write head within a grain.
+	revGrainLen = (int)sr;
+	revGrainMin = (int)(revGrainMinSec * sr);
+	const int M = 2 * revGrainLen;
+
+	// Slew the latency target across the full range in ~0.75 s.
+	revGrainSlew = (float)(revGrainLen - revGrainMin) / (0.75f * sr);
+
+	// Clear reverse buffers, reset state.
+	revBufL.assign(M, 0.f);
+	revBufR.assign(M, 0.f);
+
+	// Normalized power-complementary (sine) window, indexed by phase fraction
+	// t/N: win(p)^2 + win(p + 0.5)^2 == sin^2 + cos^2 == 1, so two grains half a
+	// window apart sum to unity gain at any grain length.
+	revWindow.resize(4096);
+	const int W = (int)revWindow.size();
+	for (int i = 0; i < W; ++i)
+		revWindow[i] = std::sin((float)M_PI * (float)i / (float)W);
+
+	// Start at maximum latency (1 s grain). Grain 1 leads grain 0 by half a
+	// grain; its anchor satisfies the invariant anchor == (write - t) mod M.
+	revGrainEff     = revGrainLen;
+	revGrainTargetF = (float)revGrainLen;
+	revWrite   = 0;
+	revPhase   = 0;
+	revAnchor0 = 0;
+	revAnchor1 = M - revGrainLen / 2;
 }
 
 json_t* Plateau::dataToJson()  {
