@@ -119,26 +119,37 @@ void Plateau::process(const ProcessArgs &args) {
 	float rvbInR = rightInput * minus20dBGain * inputSensitivity * envelope._value;
 
 	if (reverseState) {
-		const int N = revGrainLen;
-		const int M = (int)revBufL.size(); // == 2 * N
+		const int M = (int)revBufL.size(); // == 2 * revGrainLen (max)
+		const int N = revGrainEff;         // current grain length = reverse latency
+		const int half = N >> 1;
+		const int W = (int)revWindow.size();
 
 		// Record current input into the circular buffer.
 		revBufL[revWrite] = rvbInL;
 		revBufR[revWrite] = rvbInR;
 
-		// Two reversed read heads, anchored half a grain apart.
-		int r0 = revAnchor0 - revT0; if (r0 < 0) r0 += M;
-		int r1 = revAnchor1 - revT1; if (r1 < 0) r1 += M;
-		const float w0 = revWindow[revT0];
-		const float w1 = revWindow[revT1];
+		// Two reversed read heads from one master phase, half a grain apart.
+		int t0 = revPhase;
+		int t1 = revPhase + half; if (t1 >= N) t1 -= N;
+		int r0 = revAnchor0 - t0; if (r0 < 0) r0 += M;
+		int r1 = revAnchor1 - t1; if (r1 < 0) r1 += M;
+		const float w0 = revWindow[(t0 * W) / N];
+		const float w1 = revWindow[(t1 * W) / N];
 		rvbInL = w0 * revBufL[r0] + w1 * revBufL[r1];
 		rvbInR = w0 * revBufR[r0] + w1 * revBufR[r1];
 
-		// Advance write head, then grains. Each grain re-anchors to the newest
-		// sample at the end of its window, where its window gain is 0 (no click).
+		// Advance write head and master phase. Each grain re-anchors to the
+		// newest sample at its own window edge (gain 0), so it is click-free.
+		// The new latency is latched at the master wrap; slewing the target
+		// keeps the per-wrap step on the other (mid-window) grain small.
 		if (++revWrite >= M) revWrite = 0;
-		if (++revT0 >= N) { revT0 = 0; revAnchor0 = revWrite; }
-		if (++revT1 >= N) { revT1 = 0; revAnchor1 = revWrite; }
+		++revPhase;
+		if (revPhase == half) revAnchor1 = revWrite;   // grain 1's window edge
+		if (revPhase >= N) {                            // grain 0's window edge
+			revPhase = 0;
+			revAnchor0 = revWrite;
+			revGrainEff = (int)revGrainTargetF;         // latch new latency
+		}
 	}
 
     reverb.process(rvbInL, rvbInR);
@@ -240,6 +251,19 @@ void Plateau::getParameters() {
     preDelay = params[PRE_DELAY_PARAM].getValue();
     preDelay += 0.5f * (Pow2(inputs[PRE_DELAY_CV_INPUT].getVoltage() *
                              preDelayCVSens) - 1.f);
+
+    // In reverse mode, the pre-delay knob/CV instead sets the reverse latency
+    // (= grain length), and the reverb's own pre-delay is forced to 0. The knob
+    // is 0..0.5, so scale by 2 for a 0..1 control; CV adds on top.
+    if (reverseState) {
+        float revCtl = params[PRE_DELAY_PARAM].getValue() * 2.f
+                       + inputs[PRE_DELAY_CV_INPUT].getVoltage() * preDelayCVSens * 0.1f;
+        revCtl = clamp(revCtl, 0.f, 1.f);
+        float target = (float)revGrainMin + revCtl * (float)(revGrainLen - revGrainMin);
+        // Linear slew so steady knob == zero per-wrap change, moves stay bounded.
+        revGrainTargetF += clamp(target - revGrainTargetF, -revGrainSlew, revGrainSlew);
+        preDelay = 0.f;
+    }
 
     size = inputs[SIZE_CV_INPUT].getVoltage() *
            params[SIZE_CV_PARAM].getValue() * 0.1f;
@@ -345,26 +369,35 @@ void Plateau::onSampleRateChange() {
     reverb.setSampleRate(sr);
     envelope.setSampleRate(sr);
 
-	// 1-second grain; circular record buffer is twice that so the reversed read
+	// Max grain = 1 s; circular record buffer is twice that so the reversed read
 	// heads never collide with the write head within a grain.
 	revGrainLen = (int)sr;
+	revGrainMin = (int)(0.05f * sr);         // ~50 ms minimum latency
 	const int M = 2 * revGrainLen;
+
+	// Slew the latency target across the full range in ~0.75 s.
+	revGrainSlew = (float)(revGrainLen - revGrainMin) / (0.75f * sr);
 
 	// Clear reverse buffers, reset state.
 	revBufL.assign(M, 0.f);
 	revBufR.assign(M, 0.f);
 
-	// Power-complementary (sine) window: win(t)^2 + win(t + N/2)^2 == 1, so two
-	// grains offset by half a window sum to unity gain.
-	revWindow.resize(revGrainLen);
-	for (int i = 0; i < revGrainLen; ++i)
-		revWindow[i] = std::sin((float)M_PI * (float)i / (float)revGrainLen);
+	// Normalized power-complementary (sine) window, indexed by phase fraction
+	// t/N: win(p)^2 + win(p + 0.5)^2 == sin^2 + cos^2 == 1, so two grains half a
+	// window apart sum to unity gain at any grain length.
+	revWindow.resize(4096);
+	const int W = (int)revWindow.size();
+	for (int i = 0; i < W; ++i)
+		revWindow[i] = std::sin((float)M_PI * (float)i / (float)W);
 
+	// Start at maximum latency (1 s grain). Grain 1 leads grain 0 by half a
+	// grain; its anchor satisfies the invariant anchor == (write - t) mod M.
+	revGrainEff     = revGrainLen;
+	revGrainTargetF = (float)revGrainLen;
 	revWrite   = 0;
-	revT0      = 0;
+	revPhase   = 0;
 	revAnchor0 = 0;
-	revT1      = revGrainLen / 2;            // second grain leads by half a window
-	revAnchor1 = M - revGrainLen / 2;        // keeps anchor == (write - t) mod M
+	revAnchor1 = M - revGrainLen / 2;
 }
 
 json_t* Plateau::dataToJson()  {

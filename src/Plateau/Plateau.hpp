@@ -199,17 +199,26 @@ struct Plateau : Module {
     int diffuseInput = 1;
 
     // Reverse Mode (overlap-add, two crossfaded reversed grains):
-    // Continuous circular record buffer of length 2*revGrainLen. Two grains of
-    // length revGrainLen read it backwards, offset by half a grain, summed with
-    // a power-complementary (sine) window so there is no hard block boundary for
-    // a sound to straddle. Latency is ~constant and each input plays back once.
+    // Input is recorded continuously into a circular buffer of length
+    // 2*revGrainLen (sized for the MAX grain). Two grains, derived from one
+    // master phase and offset by half a grain, read the buffer backwards and are
+    // summed through a phase-indexed power-complementary (sine) window, so a
+    // sound never straddles a hard block boundary and plays back once.
+    //
+    // The grain length is variable and sets the reverse latency: it is latched
+    // at the master wrap (where grain 0's window gain is 0) and the target is
+    // slewed so the per-wrap step stays small and click-free.
     std::vector<float> revBufL, revBufR;   // circular record, length 2*revGrainLen
-    std::vector<float> revWindow;          // sine window, length revGrainLen
-    int  revGrainLen = 48000;              // grain/window length (~1 s)
-    int  revWrite    = 0;                  // write index into record buffer
-    int  revT0 = 0,      revT1 = 0;        // per-grain local time, 0..revGrainLen-1
-    int  revAnchor0 = 0, revAnchor1 = 0;   // record index each grain anchored at
-    bool reverseState = false;
+    std::vector<float> revWindow;          // normalized sine window (phase-indexed)
+    int   revGrainLen     = 48000;         // MAX grain length (~1 s); buffer = 2x this
+    int   revGrainMin     = 2400;          // MIN grain length (~50 ms)
+    int   revGrainEff     = 48000;         // current grain length (latched at wrap)
+    float revGrainTargetF = 48000.f;       // slewed target grain length (samples)
+    float revGrainSlew    = 1.3f;          // max grain-length change per sample
+    int   revWrite    = 0;                 // write index into record buffer
+    int   revPhase    = 0;                 // master phase, 0..revGrainEff-1
+    int   revAnchor0  = 0, revAnchor1 = 0; // record index each grain anchored at
+    bool  reverseState = false;
 
     Plateau();
 
