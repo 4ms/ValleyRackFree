@@ -109,47 +109,43 @@ void Plateau::process(const ProcessArgs &args) {
     reverb.setTankModDepth(modDepth);
     reverb.setTankModShape(modShape);
 
-	// Reverse reverb: overlap-add of two time-reversed grains feeding the tank.
-	// Input is recorded continuously into a circular buffer (length 2*grain).
-	// Two grains read it backwards, offset by half a grain, and are crossfaded
-	// with a power-complementary sine window. Because recording is seamless and
-	// the two grains overlap, a sound never straddles a hard block boundary, so
-	// it plays back exactly once with near-constant latency.
 	float rvbInL = leftInput * minus20dBGain * inputSensitivity * envelope._value;
 	float rvbInR = rightInput * minus20dBGain * inputSensitivity * envelope._value;
 
+	// Reverse reverb: overlap-add of two time-reversed grains feeding the tank.
+	const int M = revBufL.size(); // == 2 * revGrainLen (max)
+	const int N = revGrainEff;         // current grain length = reverse latency
+	const int half = N >> 1;
+
+	revBufL[revWrite] = rvbInL;
+	revBufR[revWrite] = rvbInR;
+
 	if (reverseState) {
-		const int M = (int)revBufL.size(); // == 2 * revGrainLen (max)
-		const int N = revGrainEff;         // current grain length = reverse latency
-		const int half = N >> 1;
-		const int W = (int)revWindow.size();
-
-		// Record current input into the circular buffer.
-		revBufL[revWrite] = rvbInL;
-		revBufR[revWrite] = rvbInR;
-
 		// Two reversed read heads from one master phase, half a grain apart.
 		int t0 = revPhase;
-		int t1 = revPhase + half; if (t1 >= N) t1 -= N;
-		int r0 = revAnchor0 - t0; if (r0 < 0) r0 += M;
-		int r1 = revAnchor1 - t1; if (r1 < 0) r1 += M;
+		int t1 = (revPhase + half >= N) ? revPhase + half - N : revPhase + half;
+		int r0 = revAnchor0 >= t0 ? revAnchor0 - t0 : revAnchor0 + M - t0; 
+		int r1 = revAnchor1 >= t1 ? revAnchor1 - t1 : revAnchor1 + M - t1;
+		const int W = revWindow.size();
 		const float w0 = revWindow[(t0 * W) / N];
 		const float w1 = revWindow[(t1 * W) / N];
 		rvbInL = w0 * revBufL[r0] + w1 * revBufL[r1];
 		rvbInR = w0 * revBufR[r0] + w1 * revBufR[r1];
+	}
 
-		// Advance write head and master phase. Each grain re-anchors to the
-		// newest sample at its own window edge (gain 0), so it is click-free.
-		// The new latency is latched at the master wrap; slewing the target
-		// keeps the per-wrap step on the other (mid-window) grain small.
-		if (++revWrite >= M) revWrite = 0;
-		++revPhase;
-		if (revPhase == half) revAnchor1 = revWrite;   // grain 1's window edge
-		if (revPhase >= N) {                            // grain 0's window edge
-			revPhase = 0;
-			revAnchor0 = revWrite;
-			revGrainEff = (int)revGrainTargetF;         // latch new latency
-		}
+	// Advance write head and master phase. Each grain re-anchors to the
+	// newest sample at its own window edge (gain 0), so it is click-free.
+	// The new latency is latched at the master wrap; slewing the target
+	// keeps the per-wrap step on the other (mid-window) grain small.
+	if (++revWrite >= M) 
+		revWrite = 0;
+	++revPhase;
+	if (revPhase == half) 
+		revAnchor1 = revWrite;   // grain 1's window edge
+	if (revPhase >= N) {                            // grain 0's window edge
+		revPhase = 0;
+		revAnchor0 = revWrite;
+		revGrainEff = (int)revGrainTargetF;         // latch new latency
 	}
 
     reverb.process(rvbInL, rvbInR);
@@ -372,7 +368,7 @@ void Plateau::onSampleRateChange() {
 	// Max grain = 1 s; circular record buffer is twice that so the reversed read
 	// heads never collide with the write head within a grain.
 	revGrainLen = (int)sr;
-	revGrainMin = (int)(0.05f * sr);         // ~50 ms minimum latency
+	revGrainMin = (int)(revGrainMinSec * sr);
 	const int M = 2 * revGrainLen;
 
 	// Slew the latency target across the full range in ~0.75 s.

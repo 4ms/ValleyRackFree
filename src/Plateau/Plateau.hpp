@@ -208,16 +208,21 @@ struct Plateau : Module {
     // The grain length is variable and sets the reverse latency: it is latched
     // at the master wrap (where grain 0's window gain is 0) and the target is
     // slewed so the per-wrap step stays small and click-free.
-    std::vector<float> revBufL, revBufR;   // circular record, length 2*revGrainLen
-    std::vector<float> revWindow;          // normalized sine window (phase-indexed)
-    int   revGrainLen     = 48000;         // MAX grain length (~1 s); buffer = 2x this
-    int   revGrainMin     = 2400;          // MIN grain length (~50 ms)
-    int   revGrainEff     = 48000;         // current grain length (latched at wrap)
-    float revGrainTargetF = 48000.f;       // slewed target grain length (samples)
-    float revGrainSlew    = 1.3f;          // max grain-length change per sample
-    int   revWrite    = 0;                 // write index into record buffer
-    int   revPhase    = 0;                 // master phase, 0..revGrainEff-1
-    int   revAnchor0  = 0, revAnchor1 = 0; // record index each grain anchored at
+    std::vector<float> revBufL;
+	std::vector<float> revBufR;   					// circular record, length 2*revGrainLen
+    std::vector<float> revWindow;          			// normalized sine window (phase-indexed)
+
+    int   revGrainLen     = 48000;         			// MAX grain length (~1 s); buffer = 2x this
+	static constexpr float revGrainMinSec = 0.1f;  	// MIN grain length (~100 ms)
+    int   revGrainMin     = revGrainLen * revGrainMinSec;
+
+    int   revGrainEff     = revGrainLen;         	// current grain length (latched at wrap)
+    float revGrainTargetF = revGrainLen;       		// slewed target grain length (samples)
+    float revGrainSlew    = 1.3f;          			// max grain-length change per sample
+    int   revWrite    = 0;                 			// write index into record buffer
+    int   revPhase    = 0;                 			// master phase, 0..revGrainEff-1
+    int   revAnchor0  = 0;
+	int   revAnchor1  = 0; 							// record index each grain anchored at
     bool  reverseState = false;
 
     Plateau();
