@@ -15,7 +15,7 @@
 class VecLPG {
 public:
     __m128 __env;
-    __m128 __attack, __decay;
+    __m128 __attack, decay__;
     __m128 __cutoff, __maxCutoff;
     __m128 __filterSwitch;
     __m128 __vca, __filter, __output;
@@ -85,13 +85,13 @@ public:
         __offset = longScale ? __longOffset : __zeros;
         __m128 x = _mm_mul_ps(_mm_clamp_ps(decay, __zeros, __ones), _mm_add_ps(__scale, __offset));
         x = _mm_sub_ps(_mm_set1_ps(0.4f), _mm_mul_ps(_mm_set1_ps(0.4f), x));
-        __decay = _mm_mul_ps(x, x);
-        __decay = _mm_mul_ps(__decay, x);
-        __decay = _mm_mul_ps(__decay, x);
-        __decay = _mm_mul_ps(__decay, x);
-        __decay = _mm_mul_ps(__decay, x);
-        __decay = _mm_sub_ps(_mm_set1_ps(0.999995f), __decay);
-        __envelope.fallRate = __decay;
+        decay__ = _mm_mul_ps(x, x);
+        decay__ = _mm_mul_ps(decay__, x);
+        decay__ = _mm_mul_ps(decay__, x);
+        decay__ = _mm_mul_ps(decay__, x);
+        decay__ = _mm_mul_ps(decay__, x);
+        decay__ = _mm_sub_ps(_mm_set1_ps(0.999995f), decay__);
+        __envelope.fallRate = decay__;
     }
 
     void setSampleRate(float newSampleRate) {
