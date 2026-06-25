@@ -252,12 +252,11 @@ void Dattorro1997Tank::tickApfModulation() {
     auto l2 = lfo2.process();
     auto l3 = lfo3.process();
     auto l4 = lfo4.process();
-    if (lfoExcursion > 0.f) {
-        leftApf1.delay.setDelayTime(l1 * lfoExcursion + scaledLeftApf1Time);
-        leftApf2.delay.setDelayTime(l2 * lfoExcursion + scaledLeftApf2Time);
-        rightApf1.delay.setDelayTime(l3 * lfoExcursion + scaledRightApf1Time);
-        rightApf2.delay.setDelayTime(l4 * lfoExcursion + scaledRightApf2Time);
-    }
+
+    leftApf1.delay.setDelayTime(l1 * lfoExcursion + scaledLeftApf1Time);
+    leftApf2.delay.setDelayTime(l2 * lfoExcursion + scaledLeftApf2Time);
+    rightApf1.delay.setDelayTime(l3 * lfoExcursion + scaledRightApf1Time);
+    rightApf2.delay.setDelayTime(l4 * lfoExcursion + scaledRightApf2Time);
 }
 
 void Dattorro1997Tank::rescaleApfAndDelayTimes() {
