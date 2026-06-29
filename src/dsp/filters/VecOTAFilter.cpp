@@ -151,12 +151,16 @@ void VecOTAFilter::calcInternalGTable() {
 	for (auto i = 0; i < G_TABLE_SIZE; ++i) {
 #ifdef VALLEY_USE_VECOTA_LUT
 		f = 440.f * Pow2((i + TableIndexMinOctave) / TableIndexPerOctave); //440 * 2^(-5..6) = 13.75 .. 28160
-		wd = 2.f * M_PI * f;											   //86 .. 177'000
-		wa = (2.f / T) * Tanf(wd * T_2); //wd/(2*SR) == wd/(48000..192000) = 0.0004 ... 3.69
 #else
 		f = 440.f * powf(2.f, (i + TableIndexMinOctave) / TableIndexPerOctave);
+#endif
 		wd = 2.f * M_PI * f;
-		wa = (2.f / T) * tanf(wd * T_2);
+		auto wd_clamped = std::min(wd * T_2, 1.5f); // clamp it just under pi/2
+
+#ifdef VALLEY_USE_VECOTA_LUT
+		wa = (2.f / T) * Tanf(wd_clamped);
+#else
+		wa = (2.f / T) * tanf(wd_clamped);
 #endif
 		g = wa * T_2;
 		_kGTable[i] = g;
