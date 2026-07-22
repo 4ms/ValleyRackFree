@@ -6,7 +6,7 @@
 //
 
 #include "Topograph.hpp"
-#include <charconv>
+#include <cstdio>
 
 Topograph::Topograph() {
 	config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -631,7 +631,8 @@ void TopographWidget::step() {
     auto floatToTempoText = [](float a){
 		std::string buf(8, '\0');
 		if (a >= 40.0)
-			std::to_chars(buf.data(), buf.data() + buf.size(), a, std::chars_format::fixed, 1);
+			// %.1f instead of std::to_chars: float to_chars pulls in ~120KB of libstdc++ ryu tables
+			buf.resize(std::snprintf(buf.data(), buf.size(), "%.1f", a));
 		else
 			buf = "Ext.";
 
