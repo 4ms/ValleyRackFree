@@ -1,4 +1,5 @@
-#if defined(SIMULATOR)
+// On x86, native SSE headers must be included before rack.hpp enables simde's _mm_* aliases
+#if defined(SIMULATOR) || defined(__SSE2__) || defined(_M_X64)
 #include "simd/SIMDUtilities.hpp"
 #endif
 
